@@ -1,17 +1,34 @@
 #include "MemoryManager.h"
 
-void leakfunc1();
-void leakfunc2();
-void leakfunc3();
+#define MAX_TEST_NUM 1000
 
 MemoryManager* g_pMemoryManager = MemoryManager::GetInstancePtr();
 
+void TestUsingPagedMemory(const size_t size[] , size_t num)
+{
+	for(size_t i = 0; i < num; ++i)
+		g_pMemoryManager->Allocate(size[i])
+}
+
+void TestUsingNormal(const size_t size[] , size_t num)
+{
+	for(size_t i = 0; i < num; ++i)
+		malloc(size[i]);
+}
+
 int main()
 {
+	srand(time(NULL));
 	g_pMemoryManager->Initialize();
-	leakfunc1();
-	g_pMemoryManager->DumpMemLeak();
-	g_pMemoryManager->Report();
+	size_t size[MAX_TEST_NUM];
+	for(size_t i = 0; i < MAX_TEST_NUM; ++i)
+		size[i] = 1 + rand() % 10239;
+
+	TestUsingPagedMemory(size , MAX_TEST_NUM);
+	TestUsingNormal(size , MAX_TEST_NUM);
+
+	//g_pMemoryManager->DumpMemLeak();
+	//g_pMemoryManager->Report();
 	g_pMemoryManager->Release();
 	return 0;
 }
