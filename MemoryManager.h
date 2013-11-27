@@ -38,19 +38,23 @@ private:
 
 	BlockPage* _pPageTable[PAGE_POOL_NUM];
 
+#ifdef MEM_TRACK
 	struct __declspec(align(4)) Chunk
 	{
 		void* pAddr;
 		size_t size;
 		void* pStackFrame[MAX_STACK_NUM];
 	};
+#endif
 
 	static MemoryManager _sInstance;
 private:
 	MemoryManager() {}
 	~MemoryManager() {}
+#ifdef MEM_TRACK
 	void AddChunk(Chunk* pChunk);
 	void RemoveChunk(unsigned long addr);
+#endif
 	int GetPageIndex(size_t size);
 	BlockPage* AllocNewPage(int pageIdx);
 public:
@@ -60,10 +64,12 @@ public:
 	void* Allocate(size_t size);
 	void Deallocate(void* block);
 	void Report();
+#ifdef MEM_TRACK
 	void DumpMemLeak();
 protected:
 	stdext::hash_map<unsigned long , Chunk*> m_hmChucks;
 	typedef stdext::hash_map<unsigned long , Chunk*>::iterator CHUNCK_MAP_ITER;
+#endif
 };
 
 #endif

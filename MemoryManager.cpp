@@ -66,6 +66,7 @@ int MemoryManager::GetPageIndex(size_t size)
 {
 	int idx = 0;
 	int span = 8;
+	if(size < span) size = span;
 
 	for(size_t i = 0; i < MAX_SPAN; ++i)
 	{
@@ -144,12 +145,16 @@ void* MemoryManager::Allocate(size_t size)
 	}
 
 	pBlock += MEM_SIZE_BYTE;
+
+#ifdef MEM_TRACK
 	Chunk* pChunk = (Chunk*)VirtualAlloc(NULL , sizeof(Chunk) , MEM_COMMIT , PAGE_READWRITE);
+	if(!pChunk)
+		printf("error %d\n" , GetLastError());
 	pChunk->pAddr = pBlock;
 	pChunk->size = size;
 	BACKTRACE_CALLSTACK(pChunk->pStackFrame);
-
 	AddChunk(pChunk);
+#endif
 
 	return pBlock;
 }
@@ -170,8 +175,25 @@ void MemoryManager::Deallocate(void* block)
 		VirtualFree(pAllocBlock , 0 , MEM_RELEASE);
 	}
 
+#ifdef MEM_TRACK
 	RemoveChunk((unsigned long)block);	
+#endif
 }
+
+void MemoryManager::Report()
+{
+	//printf("----------------Memory Report----------------\n");
+	//SmallBlockPage* pNext = _pSmallBlockPages;
+	//int i = 1;
+	//while(pNext)
+	//{
+	//	printf("Page %d\n" , i++);
+	//	printf("\t Free Count:%d\n" , pNext->tail.freeBlockCount);
+	//	pNext = (SmallBlockPage*)pNext->tail.pNextPage;
+	//}
+}
+
+#ifdef MEM_TRACK
 
 void MemoryManager::AddChunk(Chunk* pChunk)
 {
@@ -186,19 +208,6 @@ void MemoryManager::RemoveChunk(unsigned long addr)
 		VirtualFree(iter->second , sizeof(Chunk) , MEM_RELEASE);
 		m_hmChucks.erase(iter);
 	}
-}
-
-void MemoryManager::Report()
-{
-	//printf("----------------Memory Report----------------\n");
-	//SmallBlockPage* pNext = _pSmallBlockPages;
-	//int i = 1;
-	//while(pNext)
-	//{
-	//	printf("Page %d\n" , i++);
-	//	printf("\t Free Count:%d\n" , pNext->tail.freeBlockCount);
-	//	pNext = (SmallBlockPage*)pNext->tail.pNextPage;
-	//}
 }
 
 void MemoryManager::DumpMemLeak()
@@ -251,3 +260,5 @@ void MemoryManager::DumpMemLeak()
 	}
 	printf("------------------------------------------------\n");
 }
+
+#endif
