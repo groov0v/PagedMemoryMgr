@@ -1,24 +1,30 @@
 #include "MemoryManager.h"
+#include <windows.h>
+#include <time.h>
 
-#define MAX_TEST_NUM 1000
+#define MAX_TEST_NUM 50000
 
 MemoryManager* g_pMemoryManager = MemoryManager::GetInstancePtr();
 
 void TestUsingPagedMemory(const size_t size[] , size_t num)
 {
+	DWORD time = timeGetTime();
 	for(size_t i = 0; i < num; ++i)
-		g_pMemoryManager->Allocate(size[i])
+		g_pMemoryManager->Allocate(size[i]);
+	printf("TestUsingPagedMemory : %d\n" , timeGetTime() - time);
 }
 
 void TestUsingNormal(const size_t size[] , size_t num)
 {
+	DWORD time = timeGetTime();
 	for(size_t i = 0; i < num; ++i)
 		malloc(size[i]);
+	printf("TestUsingNormal : %d\n" , timeGetTime() - time);
 }
 
 int main()
 {
-	srand(time(NULL));
+	srand(time(0));
 	g_pMemoryManager->Initialize();
 	size_t size[MAX_TEST_NUM];
 	for(size_t i = 0; i < MAX_TEST_NUM; ++i)
@@ -27,29 +33,12 @@ int main()
 	TestUsingPagedMemory(size , MAX_TEST_NUM);
 	TestUsingNormal(size , MAX_TEST_NUM);
 
+	//printf("-------Test Data-------\n");
+	//for(size_t i = 0; i < MAX_TEST_NUM; ++i)
+	//	printf("%d " , size[i]);
+
 	//g_pMemoryManager->DumpMemLeak();
 	//g_pMemoryManager->Report();
 	g_pMemoryManager->Release();
 	return 0;
-}
-
-void leakfunc1()
-{
-	char* pBuff = (char*)g_pMemoryManager->Allocate(1024);
-	sprintf_s(pBuff , 507 , "leakfunc1 - Memory Leak here!\0");
-	leakfunc2();
-}
-
-void leakfunc2()
-{
-	char* pBuff = (char*)g_pMemoryManager->Allocate(3101);
-	sprintf_s(pBuff , 3100 , "leakfunc2 - Memory Leak here!\0");
-	leakfunc3();
-	g_pMemoryManager->Deallocate(pBuff);
-}
-
-void leakfunc3()
-{
-	char* pBuff = (char*)g_pMemoryManager->Allocate(1921);
-	sprintf_s(pBuff , 1920 , "leakfunc3 - Memory Leak here!\0");
 }
